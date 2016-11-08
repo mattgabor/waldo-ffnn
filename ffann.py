@@ -21,32 +21,26 @@ import matplotlib as mpl
 
 import sys
 
-# write errors to file
-sys.stdout = open('output/p2.txt', 'w+')
+print("Reading Data...")
+from readData import dataSet
+print("Finished Reading Data.")
 
-##### IMPORT DATA #####
+# split data into testing and training data
+testingDataTemp , trainingDataTemp = dataSet.splitWithProportion( 0.1 );
 
-# import data
-X = np.genfromtxt('data/yeast.data', usecols=(1,2,3,4,5,6,7,8))
-classes = np.genfromtxt('data/yeast.data', dtype=str, usecols=(9)).tolist()
+# reconvert to fix class issue
+testingData = ClassificationDataSet( 64*64*3 , nb_classes = 2 );
+for n in xrange( 0 , testingDataTemp.getLength() ):
+	testingData.addSample( testingDataTemp.getSample( n )[ 0 ] , testingDataTemp.getSample( n )[ 1 ] );
 
-# assign class values to integers for usability (Alphabetically)
-classNames = ['CYT', 'ERL', 'EXC', 'ME1', 'ME2', 'ME3', 'MIT', 'NUC', 'POX', 'VAC']
-classDict = {'CYT': 0, 'ERL': 1, 'EXC': 2, 'ME1': 3, 'ME2': 4, 'ME3': 5, 'MIT': 6, 'NUC': 7, 'POX': 8, 'VAC': 9}
-Y = []
+trainingData = ClassificationDataSet( 64*64*3 , nb_classes = 2 );
+for n in xrange( 0 , trainingDataTemp.getLength() ):
+	trainingData.addSample( trainingDataTemp.getSample( n )[ 0 ] , trainingDataTemp.getSample( n )[ 1 ] );
 
-for name in classes:
-    Y.append(classDict[name])
+# reencode outputs, necessary for training accurately
+testingData._convertToOneOfMany();
+trainingData._convertToOneOfMany();
 
-##### CONSTRUCT DATASET #####
-
-# create ClassificationDataSet and add samples
-ds = ClassificationDataSet(8, 1, nb_classes=10, class_labels=classNames)
-for i in range(X.shape[0]):
-    X_i = X[i, :].tolist()
-    ds.addSample(X_i, Y[i])
-
-ds._convertToOneOfMany()
 
 ##### BUILD ANN #####
 # build feed-forward multi-layer perceptron ANN
@@ -54,9 +48,9 @@ fnn = FeedForwardNetwork()
 
 # create layers: 9 input layer nodes (8 features + 1 bias), 3 hidden layer nodes, 10 output layer nodes
 bias = BiasUnit(name='bias unit')
-input_layer = LinearLayer(8, name='input layer')
-hidden_layer = SigmoidLayer(3, name='hidden layer')
-output_layer = SigmoidLayer(10, name='output layer')
+input_layer = LinearLayer(64*64*3, name='input layer')
+hidden_layer = SigmoidLayer(64*64*3/2, name='hidden layer')
+output_layer = SigmoidLayer(2, name='output layer')
 
 # create connections with full connectivity between layers
 bias_to_hidden = FullConnection(bias, hidden_layer, name='bias-hid')
@@ -78,8 +72,11 @@ fnn.sortModules()
 # set up trainer that takes network & training dataset as input
 
 # train model until convergence
-trainer = BackpropTrainer(fnn, dataset=ds, verbose=False, learningrate = 1)
+trainer = BackpropTrainer(fnn, dataset=trainingData, verbose=True, learningrate = 1)
+
+print("Starting Training...")
 trainer.trainEpochs(100)
+print("Finished Training.")
 
 # results of training
 allresult = percentError(trainer.testOnClassData(), ds['class'])
