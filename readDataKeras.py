@@ -1,30 +1,31 @@
 # for images
 from PIL 							import Image
 
-# for network
-from pybrain.datasets 				import ClassificationDataSet
-from pybrain.utilities				import percentError
-from pybrain.tools.shortcuts		import buildNetwork
-from pybrain.supervised.trainers	import BackpropTrainer
-from pybrain.structure.modules 		import SigmoidLayer
-from pybrain.structure.modules   	import LinearLayer, BiasUnit
-from pybrain.structure           	import FeedForwardNetwork, FullConnection
-
 import numpy
 import os
+import time
 
 # variables
-# negativeImageDirectory = './Hey-Waldo-master/64/notwaldo'
-# positiveImageDirectory = './Hey-Waldo-master/64/waldo'
+negativeImageDirectory = './Hey-Waldo-master/64/notwaldo'
+positiveImageDirectory = './Hey-Waldo-master/64/waldo'
 
-negativeImageDirectory = './Hey-Waldo-master/64/notwaldosmall'
-positiveImageDirectory = './Hey-Waldo-master/64/waldosmall'
+# negativeImageDirectory = './Hey-Waldo-master/64/notwaldosmall'
+# positiveImageDirectory = './Hey-Waldo-master/64/waldosmall'
 
 # read in negative images
-dataSet = ClassificationDataSet( 64*64*3 , nb_classes=2 )
 negativeImageFiles = os.listdir( negativeImageDirectory )
 
-for fi in negativeImageFiles:
+# do the same but for the positive images
+positiveImageFiles = os.listdir( positiveImageDirectory )
+
+numFiles = len(negativeImageFiles) + len(positiveImageFiles)
+
+dataSet = numpy.ndarray((numFiles, 64*64*3 + 1))
+
+start = time.time()
+
+for k in range(len(negativeImageFiles)):
+	fi = negativeImageFiles[k]
 	# open image
 	currentArray = numpy.array( [] )
 	fullPath 	 = negativeImageDirectory + '/' + fi
@@ -36,13 +37,14 @@ for fi in negativeImageFiles:
 		for j in range( imageSize[1] ):
 			pixelArray = [ imagePixels[i,j][0] , imagePixels[i,j][1] , imagePixels[i,j][2] ]
 			currentArray = numpy.append( currentArray , pixelArray )
+
 	# append to dataset
-	dataSet.appendLinked( currentArray , 0 );
+	currentArray = numpy.append(currentArray, 0)
+	dataSet[k] = currentArray
 
-# do the same but for the positive images
-positiveImageFiles = os.listdir( positiveImageDirectory )
 
-for fi in positiveImageFiles:
+for k in range(len(positiveImageFiles)):
+	fi = positiveImageFiles[k]
 	currentArray = numpy.array( [] )
 	fullPath     = positiveImageDirectory + '/' + fi
 	currentImage = Image.open( fullPath )
@@ -52,4 +54,8 @@ for fi in positiveImageFiles:
 		for j in range( imageSize[1] ):
 			pixelArray = [ imagePixels[i,j][0] , imagePixels[i,j][1] , imagePixels[i,j][2] ]
 			currentArray = numpy.append( currentArray , pixelArray )
-	dataSet.appendLinked( currentArray , 1 );
+
+	currentArray = numpy.append(currentArray, 1)
+	dataSet[k + len(negativeImageFiles)] = currentArray
+
+print time.time() - start

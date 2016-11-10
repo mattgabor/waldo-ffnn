@@ -75,10 +75,10 @@ fnn.sortModules()
 trainer = BackpropTrainer(fnn, dataset=trainingData, verbose=True, learningrate = 1)
 
 print("Starting Training...")
-trainer.trainEpochs(100)
+trainer.trainEpochs(1)
 print("Finished Training.")
 
 # results of training
-allresult = percentError(trainer.testOnClassData(), ds['class'])
+allresult = percentError(trainer.testOnClassData(), dataSet['class'])
 print ("\nepoch: %4d" % trainer.totalepochs, \
 "  total error: %5.2f%%" % allresult)
