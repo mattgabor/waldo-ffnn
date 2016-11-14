@@ -9,7 +9,7 @@ from keras.optimizers import RMSprop
 from keras.datasets import mnist
 
 print("Reading Data...")
-from readDataBw import positiveDataSet, negativeDataSet
+from readDataColorMapping import positiveDataSet, negativeDataSet
 print("Finished Reading Data.")
 
 class LossHistory(cb.Callback):
@@ -55,6 +55,7 @@ def init_model():
     model.add(Dense(2))
     model.add(Activation('sigmoid'))
 
+    # rms = RMSprop()
     rms = RMSprop()
     model.compile(loss='sparse_categorical_crossentropy', optimizer=rms, metrics=['accuracy'])
     print 'Model compiled in {0} seconds'.format(time.time() - start_time)
@@ -79,7 +80,7 @@ def run_network(data=None, model=None, epochs=3, batch=256):
                   validation_data=(X_test, y_test), verbose=2)
 
         print "Training duration : {0}".format(time.time() - start_time)
-        score = model.evaluate(X_test, y_test, batch_size=16)
+        score = model.evaluate(X_test, y_test, batch_size=len(testingData))
 
         print "Network's test score [loss, accuracy]: {0}".format(score)
         return model, history.losses
@@ -89,4 +90,4 @@ def run_network(data=None, model=None, epochs=3, batch=256):
 
 dataTuple = ( trainingDataX , testingDataX , trainingDataY , testingDataY )
 annModel = init_model()
-model , losses = run_network( dataTuple , annModel )
+model , losses = run_network( dataTuple , annModel, batch=len(trainingData))
