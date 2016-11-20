@@ -1,8 +1,8 @@
 library('h2o')
 h2o.init(nthreads=-1)
 # import data
-negative_data_set 		<- read.table('../images_as_txt/mappedNegative.txt')
-positive_data_set 		<- read.table('../images_as_txt/mappedPositive.txt')
+negative_data_set 		<- read.table('../images_as_txt/negativeBw.txt')
+positive_data_set 		<- read.table('../images_as_txt/positiveBw.txt')
 dataSet 		 		<- rbind(negative_data_set,positive_data_set)
 # shuffle
 dataSet 				<- dataSet[sample(nrow(dataSet)),]
@@ -18,15 +18,15 @@ testingData 			<- as.h2o(testingData)
 neuralNetwork 			<- h2o.deeplearning(x=inputTypes, y=outputTypes, training_frame=trainingData, epochs=25)
 # test network
 testingOutput			<- h2o.predict(neuralNetwork, testingData)
-ME						<- sum(abs(testingOutput-testingData$V4097))/nrow(testingOutput)
-MSE						<- sum((testingOutput-testingData$V4097)^2)/nrow(testingOutput)
+ME						<- sum(abs(testingOutput-testingData[outputTypes]))/nrow(testingOutput)
+MSE						<- sum((testingOutput-testingData[outputTypes])^2)/nrow(testingOutput)
 adjustedOutput			<- testingOutput > 0.5
-percentAccuracy			<- sum(adjustedOutput==testingData$V4097)/nrow(testingOutput)*100
+percentAccuracy			<- sum(adjustedOutput==testingData[outputTypes])/nrow(testingOutput)*100
 # get some measurements
-truePositives			<- adjustedOutput && testingData$V4097
-falsePositives			<- adjustedOutput && !testingData$V4097
-trueNegatives			<- !adjustedOutput && !testingData$V4097
-falseNegatives 			<- !adjustedOutput && testingData$V4097
+truePositives			<- adjustedOutput && testingData[outputTypes]
+falsePositives			<- adjustedOutput && !testingData[outputTypes]
+trueNegatives			<- !adjustedOutput && !testingData[outputTypes]
+falseNegatives 			<- !adjustedOutput && testingData[outputTypes]
 
 truePositivesCount 		<- sum(truePositives)
 falsePositivesCount		<- sum(falsePositives)
