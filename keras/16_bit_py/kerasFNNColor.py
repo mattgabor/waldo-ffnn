@@ -83,8 +83,8 @@ def run_network(data=None, model=None, epochs=3, batch=256):
 
         print "Network's test score [loss, accuracy]: {0}".format(score)
 
-
-
+        print "Layers: "
+        print model.layers
 
         inputDirectoryNames = [ '../../Hey-Waldo-master/64/waldo/' , '../../Hey-Waldo-master/64/notwaldo/' ]
         for dir in range(1):
@@ -92,61 +92,53 @@ def run_network(data=None, model=None, epochs=3, batch=256):
             random.shuffle(testFiles)
             testFiles = testFiles [0:10]
             testFiles = [inputDirectoryNames[dir]+ a for a in testFiles]
-        for t in testFiles:
-            print t
-
-        splice(testFiles[0] , model)
-            #for t in testFiles:
-                #print t
-                #read in the file
-                #while waldo is not dected AND theres still some left in the file
-                    #get subarray
-                    #feed subarray to model
-                #if the model is positive:
+            for t in testFiles:
+                pred = testing(t , model)
+                #if the prediction is positive:
                     # rates[dir * 2] += 1
                 #else
                     #rates[dir*2 + 1] += 1
 
 
-
-
-        #return model, history.losses
-        return model
+        return model, history.losses
+        #return model
     except KeyboardInterrupt:
         print ' KeyboardInterrupt'
         return model, history.losses
 
-def splice(fileName , model):
+def testing(fileName , model):
     img = Image.open(fileName)
     width, height = img.size
     for x in range(width - 16 + 1):
         for y in range(height - 16+ 1):
-            #print x , y
+            #if waldo is dected:
+                #break out of all loops and return true
+
             bbox = (x, y, x+ 16, y + 16)
             working_slice = img.crop(bbox)
-            flattened = numpy.array(working_slice).flatten
-            predictions = model.predict(self, flattened, batch, verbose=0)
-            print size(predictions)
-            print predictions
-            #feed 32 x 32 x 3 
+            image_pixels = working_slice.load()
+            #print ("cropped copy size")
+            #print loaded_working_slice.size
+
+            imageSize = working_slice.size
+
+
+            current_array = numpy.array( [] )
+            for i in range( imageSize[0] ):
+                for j in range( imageSize[1] ):
+                    pixel_array = [ image_pixels[i,j][0] , image_pixels[i,j][1] , image_pixels[i,j][2] ]
+                    current_array = numpy.append( current_array , pixel_array )
+
+            current_array = current_array.reshape((1,-1))
+            predictions = model.predict( current_array, batch_size=16, verbose=0)
+    #return false
+    return predictions
+            
+            
+
  
 
 dataTuple = ( trainingDataX , testingDataX , trainingDataY , testingDataY )
 annModel = init_model()
 model , losses = run_network( dataTuple , annModel )
-run_network( dataTuple , annModel )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
